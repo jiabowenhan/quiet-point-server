@@ -1,0 +1,39 @@
+{
+  "name": "quiet-point",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "acoustic:generate": "node scripts/generate-acoustic-map.mjs",
+    "acoustic:check": "node scripts/generate-acoustic-map.mjs --check",
+    "dev": "npm run acoustic:check && concurrently -k -n API,WEB \"tsc -p tsconfig.runtime.json && node .runtime/server/index.js\" \"vite --host 127.0.0.1\"",
+    "check": "npm run acoustic:check && vue-tsc --noEmit",
+    "build": "npm run acoustic:check && vite build && tsc -p tsconfig.runtime.json",
+    "start": "node .runtime/server/index.js",
+    "cloud:build": "npm run acoustic:check && tsc -p tsconfig.runtime.json && tsc -p tsconfig.addons.json",
+    "cloud:build:web": "vite build",
+    "cloud:start": "node cloud/merged-server.mjs",
+    "test": "npm run acoustic:check && tsc -p tsconfig.runtime.json && node --test .runtime/tests/*.test.js",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "apk:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "express": "5.1.0",
+    "vue": "3.5.22",
+    "zod": "3.25.76",
+    "@capacitor/core": "7.6.9",
+    "@capacitor/android": "7.6.9",
+    "@capacitor/app": "7.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.3",
+    "@types/node": "24.5.2",
+    "@vitejs/plugin-vue": "6.0.1",
+    "concurrently": "9.2.1",
+    "typescript": "5.9.2",
+    "vite": "7.1.7",
+    "vue-tsc": "3.0.8",
+    "@capacitor/cli": "7.6.9"
+  }
+}

@@ -1,0 +1,21 @@
+# 构建产物与运行时目录（Render 上由 buildCommand 现场生成）
+node_modules/
+.runtime/
+.runtime-addons/
+dist/
+
+# 本地数据（云端指到 /tmp/quiet-point，绝不进仓库）
+data/
+data-addons/
+
+# 日志与临时产物
+*.log
+*.tmp
+*.bak
+*.bak-*
+
+# 凭据一律不进仓库
+.env
+.env.*
+*.pem
+secrets.json

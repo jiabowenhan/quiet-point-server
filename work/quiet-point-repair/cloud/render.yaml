@@ -1,0 +1,62 @@
+# 静点 · Render Blueprint（免费档 · **一个 Web Service 一个端口**）
+#
+# ★ 放哪儿：Render 的 Blueprint 文件**默认要在仓库根**；本文件在 `work/cloud-deploy/render.yaml`，
+#   新建 Blueprint 时把 **Blueprint Path** 填成 `work/cloud-deploy/render.yaml` 即可（已在 README 写明）。
+# ★ 路径假设：**仓库根 = 本目录（app-5g-github-deepseek-mimo-ui-4）**，应用在 `work/quiet-point-repair/`。
+#   若你的仓库根不是它，只需改这三处：`rootDir`、注释里的 dockerfilePath、`dockerContext`。
+#
+# 起什么：`cloud/merged-server.mjs` —— 主后端（server/**）与附加服务（addons/**）**同一个进程、同一个端口**，
+#   按路径前缀分流：`/addons/*` → addons，其余 → 主后端；再加合并级 CORS 与 `/healthz`。
+# 落盘：免费档**没有持久磁盘** ⇒ 数据目录指到 `/tmp/quiet-point/**`，重启即清零（App 照常可用，历史丢）。
+
+services:
+  - type: web
+    name: quiet-point-merged
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: work/quiet-point-repair
+    # 免费档默认镜像里 devDependencies 会被跳过（NODE_ENV=production），而 tsc 在 devDeps 里 ⇒ 必须 --include=dev。
+    # 前两步是后端必需品；第三步只有 Web UI 需要，且**非致命**（失败也不影响后端/App 接口）。
+    buildCommand: >-
+      npm install --include=dev --no-audit --no-fund
+      && npm run cloud:build
+      && (npm run cloud:build:web || echo "[cloud] Web UI 构建跳过（不影响后端接口）")
+    startCommand: npm run cloud:start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"                 # node:sqlite 在 Node 24 上免 flag；24 以下会起不来
+      - key: HOST
+        value: 0.0.0.0              # 合并入口默认就是 0.0.0.0，这里显式写死，免得被别的变量带偏
+      # —— 数据目录（可配；不配就是本地默认 data/ 与 data-addons/）——
+      - key: QP_DATA_DIR
+        value: /tmp/quiet-point            # 伞形：只在下面两个没给时生效（合并入口里推导）
+      - key: QUIET_DATA_DIR
+        value: /tmp/quiet-point/data       # 主库 quiet.sqlite + 学习表
+      - key: QUIET_ADDONS_DATA_DIR
+        value: /tmp/quiet-point/addons     # addons 的 room-index / checkin / presence / auth 四个 JSON
+      # —— 可选：给 addons 自己的白名单 CORS 追加来源（合并级 CORS 已回显 Origin，通常不用改）——
+      - key: QUIET_ADDONS_ORIGINS
+        value: https://localhost,capacitor://localhost,http://localhost,http://127.0.0.1:5173,http://localhost:5173
+      - key: NODE_ENV
+        value: production
+
+# ————————————————————————————————————————————————————————————————
+# 备选：用 Docker 部署（更可控；把上面这条 service 换成下面这段，二选一）
+#
+#  - type: web
+#    name: quiet-point-merged-docker
+#    runtime: docker
+#    plan: free
+#    region: singapore
+#    branch: main
+#    dockerfilePath: work/quiet-point-repair/cloud/Dockerfile
+#    dockerContext: .                 # ★ 必须是**仓库根**：Dockerfile 要 COPY work/models/yamnet-class-map.csv
+#    healthCheckPath: /healthz
+#    envVars:
+#      - key: QP_DATA_DIR
+#        value: /tmp/quiet-point
+# ————————————————————————————————————————————————————————————————

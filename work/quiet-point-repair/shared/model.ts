@@ -1,0 +1,12 @@
+import { z } from 'zod';
+export const rooms=[{id:'study-201',name:'自习室 201',building:'图书馆 · 2 层'},{id:'discussion-302',name:'讨论室 302',building:'综合楼 · 3 层'},{id:'reading-101',name:'阅览室 101',building:'图书馆 · 1 层'}] as const;
+export type RoomId=(typeof rooms)[number]['id'];
+export const roomSchema=z.enum(['study-201','discussion-302','reading-101']);
+export const sessionSchema=z.object({roomId:roomSchema,baselineDbfs:z.number().min(-100).max(0),processing:z.string().max(80)}).strict();
+export const sampleSchema=z.object({id:z.string().uuid(),sessionId:z.string().uuid(),capturedAt:z.number().int().positive(),dbfs:z.number().min(-100).max(0),clipped:z.boolean()}).strict();
+export type Sample=z.infer<typeof sampleSchema>;
+export type Source='demo'|'microphone';
+export type RoomView={id:RoomId;name:string;building:string;delta:number|null;online:boolean;terminalCount:number;ageSeconds:number|null;latestDbfs:number|null;replayed:number;clipped:boolean};
+export type Action={id:string;roomId:RoomId;sessionId:string;source:Source;startedAt:number;endedAt:number|null;before:number;after:number|null;beforeCount:number;afterCount:number;change:number|null;status:'observing'|'completed'|'expired'};
+export type State={now:number;source:Source;rooms:RoomView[];actions:Action[];demoQuiet:boolean};
+export const RULES={staleMs:45_000,replayMs:10_000,actionMinMs:30_000,minSamples:3,queueMax:240,sessionCloseSkewMs:60_000} as const;

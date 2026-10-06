@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "outDir": ".runtime",
+    "rootDir": "."
+  },
+  "include": [
+    "server/**/*.ts",
+    "shared/**/*.ts",
+    "tests/**/*.ts",
+    "app/vendor/**/*.ts",
+    "app/measurement/**/*.ts"
+  ]
+}
